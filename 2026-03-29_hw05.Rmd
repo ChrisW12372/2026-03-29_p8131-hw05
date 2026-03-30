@@ -14,6 +14,7 @@ output:
 
 ```{r message=FALSE}
 library(tidyverse)
+library(pscl)
 ```
 
 
@@ -97,14 +98,53 @@ summary(M2_q)
 
 
 
+# Question 2
+
+```{r}
+df_parasite <- read_table("data/HW5-parasite.txt") |>
+  janitor::clean_names() |>
+  mutate(
+    year = factor(year),
+    area = factor(area)
+  )
+```
+
+
+## Problem a
+
+```{r}
+fit1 <- glm(intensity ~ year + area + length, 
+            family = poisson(link = "log"), data = df_parasite)
+summary(fit1)
+```
 
 
 
+## Problem b
 
 
+```{r}
+# Deviance
+fit1$deviance
+fit1$df.residual
+1 - pchisq(fit1$deviance, fit1$df.residual)
+
+# Pearson Chi square
+pearson_chi2 <- sum(residuals(fit1, type = "pearson")^2)
+pearson_chi2
+pearson_chi2 / fit1$df.residual
+1 - pchisq(pearson_chi2, fit1$df.residual)
+```
 
 
+## Problem c
 
+```{r}
+zip_fit <- zeroinfl(intensity ~ year + area + length | year + area + length,
+                    data = df_parasite,
+                    dist = "poisson")
+summary(zip_fit)
+```
 
 
 

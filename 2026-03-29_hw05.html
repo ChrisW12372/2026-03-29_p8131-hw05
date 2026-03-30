@@ -1505,7 +1505,9 @@ border-radius: 0px;
 </div>
 
 
-<pre class="r"><code>library(tidyverse)</code></pre>
+<pre class="r"><code>library(tidyverse)
+library(pscl)</code></pre>
+<pre><code>## Warning: package &#39;pscl&#39; was built under R version 4.5.3</code></pre>
 <div id="question-1" class="section level1" number="1">
 <h1><span class="header-section-number">1</span> Question 1</h1>
 <pre class="r"><code>df_crab &lt;- read_table(&quot;data/HW5-crab.txt&quot;) |&gt;
@@ -1633,6 +1635,122 @@ summary(M2_q)</code></pre>
 ## AIC: NA
 ## 
 ## Number of Fisher Scoring iterations: 6</code></pre>
+</div>
+</div>
+<div id="question-2" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Question 2</h1>
+<pre class="r"><code>df_parasite &lt;- read_table(&quot;data/HW5-parasite.txt&quot;) |&gt;
+  janitor::clean_names() |&gt;
+  mutate(
+    year = factor(year),
+    area = factor(area)
+  )</code></pre>
+<pre><code>## Warning: Duplicated column names deduplicated: &#39;omit&#39; =&gt; &#39;omit_1&#39; [5], &#39;omit&#39;
+## =&gt; &#39;omit_2&#39; [6], &#39;omit&#39; =&gt; &#39;omit_3&#39; [8], &#39;omit&#39; =&gt; &#39;omit_4&#39; [9], &#39;omit&#39; =&gt;
+## &#39;omit_5&#39; [10]</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   Sample = col_double(),
+##   Intensity = col_double(),
+##   omit = col_double(),
+##   Year = col_double(),
+##   omit_1 = col_double(),
+##   omit_2 = col_double(),
+##   Length = col_double(),
+##   omit_3 = col_double(),
+##   omit_4 = col_double(),
+##   omit_5 = col_double(),
+##   Area = col_double()
+## )</code></pre>
+<div id="problem-a-1" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> Problem a</h2>
+<pre class="r"><code>fit1 &lt;- glm(intensity ~ year + area + length, 
+            family = poisson(link = &quot;log&quot;), data = df_parasite)
+summary(fit1)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = intensity ~ year + area + length, family = poisson(link = &quot;log&quot;), 
+##     data = df_parasite)
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)  2.6431709  0.0542838  48.692  &lt; 2e-16 ***
+## year2000     0.6702801  0.0279823  23.954  &lt; 2e-16 ***
+## year2001    -0.2181393  0.0287535  -7.587 3.29e-14 ***
+## area2       -0.2119557  0.0491691  -4.311 1.63e-05 ***
+## area3       -0.1168602  0.0428296  -2.728  0.00636 ** 
+## area4        1.4049366  0.0356625  39.395  &lt; 2e-16 ***
+## length      -0.0284228  0.0008809 -32.265  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for poisson family taken to be 1)
+## 
+##     Null deviance: 25797  on 1190  degrees of freedom
+## Residual deviance: 19153  on 1184  degrees of freedom
+##   (63 observations deleted due to missingness)
+## AIC: 21089
+## 
+## Number of Fisher Scoring iterations: 7</code></pre>
+</div>
+<div id="problem-b-1" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> Problem b</h2>
+<pre class="r"><code># Deviance
+fit1$deviance</code></pre>
+<pre><code>## [1] 19152.8</code></pre>
+<pre class="r"><code>fit1$df.residual</code></pre>
+<pre><code>## [1] 1184</code></pre>
+<pre class="r"><code>1 - pchisq(fit1$deviance, fit1$df.residual)</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code># Pearson Chi square
+pearson_chi2 &lt;- sum(residuals(fit1, type = &quot;pearson&quot;)^2)
+pearson_chi2</code></pre>
+<pre><code>## [1] 42164.97</code></pre>
+<pre class="r"><code>pearson_chi2 / fit1$df.residual</code></pre>
+<pre><code>## [1] 35.61231</code></pre>
+<pre class="r"><code>1 - pchisq(pearson_chi2, fit1$df.residual)</code></pre>
+<pre><code>## [1] 0</code></pre>
+</div>
+<div id="problem-c-1" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> Problem c</h2>
+<pre class="r"><code>zip_fit &lt;- zeroinfl(intensity ~ year + area + length | year + area + length,
+                    data = df_parasite,
+                    dist = &quot;poisson&quot;)
+summary(zip_fit)</code></pre>
+<pre><code>## 
+## Call:
+## zeroinfl(formula = intensity ~ year + area + length | year + area + length, 
+##     data = df_parasite, dist = &quot;poisson&quot;)
+## 
+## Pearson residuals:
+##     Min      1Q  Median      3Q     Max 
+## -2.1278 -0.8265 -0.5829 -0.1821 25.4837 
+## 
+## Count model coefficients (poisson with log link):
+##               Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)  3.8431714  0.0583793  65.831  &lt; 2e-16 ***
+## year2000     0.3919831  0.0282952  13.853  &lt; 2e-16 ***
+## year2001    -0.0448455  0.0296057  -1.515 0.129833    
+## area2        0.2687835  0.0500467   5.371 7.85e-08 ***
+## area3        0.1463173  0.0439485   3.329 0.000871 ***
+## area4        0.9448068  0.0368342  25.650  &lt; 2e-16 ***
+## length      -0.0368067  0.0009747 -37.762  &lt; 2e-16 ***
+## 
+## Zero-inflation model coefficients (binomial with logit link):
+##              Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)  0.552585   0.275762   2.004  0.04509 *  
+## year2000    -0.752119   0.172965  -4.348 1.37e-05 ***
+## year2001     0.456535   0.143962   3.171  0.00152 ** 
+## area2        0.718676   0.189552   3.791  0.00015 ***
+## area3        0.657708   0.167402   3.929 8.53e-05 ***
+## area4       -1.022868   0.188201  -5.435 5.48e-08 ***
+## length      -0.009889   0.004629  -2.136  0.03266 *  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1 
+## 
+## Number of iterations in BFGS optimization: 22 
+## Log-likelihood: -6950 on 14 Df</code></pre>
 </div>
 </div>
 
