@@ -1,0 +1,152 @@
+---
+title: "2026-03-29_hw05"
+author: "Chris"
+date: "2026-03-29"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    css: style.css
+---
+
+
+```{r message=FALSE}
+library(tidyverse)
+```
+
+
+# Question 1
+
+
+```{r}
+df_crab <- read_table("data/HW5-crab.txt") |>
+  janitor::clean_names() |>
+  mutate(
+    c = factor(c),
+    s = factor(s)
+  )
+```
+
+
+## Problem a
+
+
+```{r}
+M1 <- glm(sa ~ w, family = poisson(link = "log"), data = df_crab)
+summary(M1)
+```
+
+```{r}
+# Deviance goodness of fit
+M1$deviance
+M1$df.residual
+1 - pchisq(M1$deviance, M1$df.residual)
+```
+
+
+```{r}
+# Pearson Chi Square
+pearson_chi2 <- sum(residuals(M1, type = "pearson")^2)
+pearson_chi2
+pearson_chi2 / M1$df.residual
+1 - pchisq(pearson_chi2, M1$df.residual)
+```
+
+
+
+## Problem b
+
+```{r}
+M2 <- glm(sa ~ w + wt, family = poisson(link = "log"), data = df_crab)
+summary(M2)
+```
+
+
+
+```{r}
+anova(M1, M2, test = "Chisq")
+```
+
+
+```{r}
+# Deviance GOF
+M2$deviance
+M2$df.residual
+1 - pchisq(M2$deviance, M2$df.residual)
+
+# Pearson GOF
+pearson_chi2_M2 <- sum(residuals(M2, type = "pearson")^2)
+pearson_chi2_M2
+pearson_chi2_M2 / M2$df.residual
+1 - pchisq(pearson_chi2_M2, M2$df.residual)
+```
+
+
+
+## Problem c
+
+
+
+```{r}
+M2_q <- glm(sa ~ w + wt, family = quasipoisson(link = "log"), data = df_crab)
+summary(M2_q)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
